@@ -10,3 +10,39 @@ Investigating and identifying suspicious login brute activity required multiple 
 - prioritise the event associated with login URI
 - analyze events with unsuccessful outcomes with POST request
 - investigate the network traffic to get determine the activity
+
+  Targeted Investigation of Apache Access Logs
+The primary focus of the investigation should be to prioritize the logs related to the identified incident. For example, in the case of subdomain enumeration, Apache access logs should be given priority during analysis.
+
+
+
+** Targeted Investigation of Apache Access Logs
+#+begin_src bash
+event.dataset: apache.access
+#+end_src
+
+** Prioritise the event associated with login URI
+it is important to monitor attempts targeting login pages or authentication endpoints
+#+begin_src regex
+event.dataset: apache.access and url.path.keyword: *login*
+#+end_src
+
+** In correlation with HTTP 404 responses
+associated with POST requests, we can enhance the detection of brute force activity.
+#+begin_src bash
+event.dataset: apache.access and url.path.keyword: *login* and event.outcome: failure and http.response.status_code: 404 and http.request.method : "POST"
+#+end_src
+
+** Investigate the network traffic to get determine the activity
+In general, POST requests can carry extensive data, so it's essential to correlate them with network traffic to gain deeper visibility
+#+begin_src bash
+http.request.uri == "/login.php" and http.request.method == "POST"
+#+end_src
+
+[[../../imgs/brute.png]]
+
+THis lab reinforces knowledge in -->
+- log correlation
+- network forensics
+- threat hunting on web services
+- early detection of credential stuffing and brute-force attacks
