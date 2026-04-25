@@ -2,3 +2,11 @@
 #+description: this challenge/lab simulates a real-world brute-force attack against a web application login page. It emphasizes the importance of log analysis, correlation, and network packet inspection in detecting early-stage intrusion attempts
 
 As attackers often try to launch brute-force login attempts against these entry points using automated tools. These attempts typically generate multiple failed HTTP POST requests within a short period
+
+* Login Brute Force Investigation
+Investigating and identifying suspicious login brute activity required multiple corelation and analysis, below listed are some few corelation point which get to be used for proceed investigating the bruteforcing activity
+
+- Target investigation of apache access log
+- prioritise the event associated with login URI
+- analyze events with unsuccessful outcomes with POST request
+- investigate the network traffic to get determine the activity
