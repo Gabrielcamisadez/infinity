@@ -1,0 +1,35 @@
+#+title: Traversal
+#+description: Directory Traversal Attacks, also known as Path Traversal Attacks, are a type of security vulnerability that allows an attacker to access restricted directories and files on a web server or application.
+
+Below listed are some commonly abused sensitive directory where the attacker try access restricted directories
+#+begin_src bash
+/etc/passwd – User account information.
+/etc/shadow – User password hashes.
+/etc/sudoers – Sudo privileges configuration.
+/etc/hostname – System hostname.
+#+end_src
+
+
+** Directory Traversal Investigation
+- Targeted Investigation of Apache Access Logs
+- Prioritise the URI associated with sensitive directories
+- Investigate the network traffic to get validate the activity
+
+** Targeted Investigation of Apache Access Logs
+Apache access logs should be given priority during analysis. Apache access logs capture all incoming HTTP requests made to your Apache web server.
+#+begin_src bash
+event.dataset: apache.access
+#+end_src
+
+** Prioritise the event associated with login URI
+ the investigation should primarily focus on correlating URL requests captured in web access logs.
+#+begin_src bash
+event.dataset: apache.access and url.query.keyword: *../../../../* and url.query: *etc*
+#+end_src
+The above query effectively identifies events associated with directory traversal attempts, including both successful and failed logs
+
+** Investigate the network traffic to get validate the activity
+By correlating network activity with logs, we can more effectively identify successfully executed directory traversal attacks.
+#+begin_src wireshark
+http.request.uri contains "../../../../../../../../"
+#+end_src
