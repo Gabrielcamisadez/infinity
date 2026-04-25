@@ -1,0 +1,65 @@
+#+title: Bt02 - Advanced Network Reconnaissance and Service Enumeration Investigation
+#+description:  knowledge of advanced network security monitoring, sophisticated attack pattern recognition, log correlation techniques, and best practices for detecting multi-phase reconnaissance campaigns.
+
+** Investigation Methodology
+Investigating and identifying advanced network reconnaissance attack activity requires multiple correlation techniques and analysis approaches
+
+- Comprehensive UFW firewall log analysis
+- Multi-phase attack pattern identification
+- Service enumeration attempt detection
+- Stealth scanning technique recognition
+- Brute force correlation with reconnaissance activity
+- Protocol-based attack pattern analysis
+
+** Targeted Investigation of UFW firewall logs
+#+begin_src bash
+logtype: ufw
+#+end_src
+UFW logs contain comprehensive records of blocked network connections, including source IP addresses, destination ports, protocols, connection attempts, and packet characteristics
+
+** Multi-Phase Attack Pattern Identification
+Advanced reconnaissance attacks typically involve multiple scanning phases with different techniques
+#+begin_src bash
+logtype: ufw AND message: "UFW BLOCK"
+#+end_src
+This query helps identify the volume and pattern of blocked connections, which is crucial for understanding the scope of the reconnaissance campaign
+
+** Service Enumeration Attempt Detection
+During advanced network reconnaissance, attackers often perform service enumeration targeting specific application ports
+#+begin_src bash
+logtype: ufw AND message: "UFW BLOCK" AND message: "SRC=" AND message: "DPT="
+#+end_src
+identify both source IP addresses and targeted destination ports, revealing the attack's focus areas.
+
+** Stealth Scanning Technique Recognition
+Advanced attackers often employ stealth scanning techniques to avoid detection. These include FIN scans, NULL scans, XMAS scans, and fragmented packet attacks
+
+To identify these sophisticated techniques, we need to analyze the packet characteristics and connection patterns
+#+begin_src bash
+logtype: ufw AND message: "UFW BLOCK" AND message: "SRC=10.20.10.3"
+#+end_src
+This helps correlate all activities from the specific attacker source targeting the destination server
+
+** Brute Force Correlation with Reconnaissance Activity
+Advanced reconnaissance campaigns are often followed by targeted brute force attacks
+
+By correlating authentication failures with network scanning activities, we can identify coordinated attack patterns.
+#+begin_src bash
+logtype: auth AND message: "authentication failure"
+#+end_src
+
+** Protocol-Based Attack Pattern Analysis
+To gain a comprehensive understanding of the attack methodology, analyze the protocol usage patterns. Advanced reconnaissance often involves multiple protocols including ~TCP~, ~UDP~, and ~ICMP~
+#+begin_src sh
+logtype: ufw AND message: "UFW BLOCK" AND message: "SRC=10.20.10.3" AND message: "PROTO="
+#+end_src
+
+** Service Port Frequency Analysis
+To identify the most targeted services during the advanced reconnaissance attack, analyze the DPT (destination port) values in the UFW logs
+#+begin_src sh
+logtype: ufw AND message: "SRC=10.20.10.3" AND message: "DPT="
+#+end_src
+
+Examine the message field for DPT values and count the frequency of each port number to determine the primary service targets
+
+particular attention to commonly scanned ports including web services (113, 53, 135, 23, 8080), database ports, mail services, and other critical application ports.
