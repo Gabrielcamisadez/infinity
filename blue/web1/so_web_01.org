@@ -1,0 +1,4 @@
+#+title: So Web 01
+#+description: this challenge/lab simulates a real-world brute-force attack against a web application login page. It emphasizes the importance of log analysis, correlation, and network packet inspection in detecting early-stage intrusion attempts
+
+As attackers often try to launch brute-force login attempts against these entry points using automated tools. These attempts typically generate multiple failed HTTP POST requests within a short period
