@@ -1,0 +1,24 @@
+#+title: Sql
+#+description: This challenge demonstrates an investigation into a classic web exploitation technique known as SQL Injection (SQLi)—specifically UNION-based SQL Injection
+
+
+** SQLI UNION Attack Investigation
+Investigating and Identifying SQLI Union activity required multiple corelation and analysis
+
+- Targeted Investigation of Apache Access Logs
+- Identify and Prioritize URLs Associated with SQL Execution
+- Unpack the Attack Execution Sequence
+
+
+
+** Identify and Prioritize URLs Associated with SQL Execution
+During investigation, priority should be given to extracting and analyzing requests that contain SQL-related keywords in the URL
+
+#+begin_src bash
+event.dataset: apache.access and url.query: "UNION" or "SELECT" or "INTO" or "AND" or "OR"
+#+end_src
+
+** Unpack the Attack Execution Sequence
+  example extracted from elastic logs -->
+
+  [[../../imgs/sqli.png]]

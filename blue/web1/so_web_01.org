@@ -15,7 +15,6 @@ Investigating and identifying suspicious login brute activity required multiple 
 The primary focus of the investigation should be to prioritize the logs related to the identified incident. For example, in the case of subdomain enumeration, Apache access logs should be given priority during analysis.
 
 
-
 ** Targeted Investigation of Apache Access Logs
 #+begin_src bash
 event.dataset: apache.access
