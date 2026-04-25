@@ -1,0 +1,16 @@
+#+title: Subdomain Enum
+#+description: Initial phase adversarial threat are get to be the enumeration and reconnaissance, where the attacker try gather sensitive information which help exploiting for further, if an enterprise is get deployed with public facing web application
+
+** Objective
+- Understand and identify subdomain enumeration patterns in Apache access logs.
+- Perform targeted investigation of failed HTTP requests, especially 404 Not Found errors.
+- Correlate suspicious User-Agent strings commonly used by enumeration tools such as Wfuzz, MassDNS, Dirb, Nikto.
+- Validate if the activity indicates malicious reconnaissance attempts or legitimate behavior.
+- Extract relevant Indicators of Compromise (IOCs) such as attacker IP addresses, tools used, timeframes, and targeted URLs.
+- Provide a recommendation on detection rules or alerts that could proactively detect such behavior in the future.
+
+** Correlate User-Agent Data with Accessed URL/URI Paths
+Correlating the events specifically with the URL/URI and the user-agent can help determine whether the activity is legitimate or part of subdomain enumeration.
+#+begin_src bash
+event.dataset: apache.access and event.outcome: failure and http.response.status_code: 404  and user_agent.original: ("Wfuzz/3.1.0" or “massdns” or “nikto” or “dirb”)
+#+end_src
