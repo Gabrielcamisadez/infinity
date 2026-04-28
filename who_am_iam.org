@@ -1,0 +1,58 @@
+#+title: Who Am Iam
+#+description: Your objective is to simulate an attack, analyze IAM workflows, and identify any gaps that could be exploited by malicious actors.
+
+
+- Enumerate IAM users, groups, and roles to map the access structure.
+- Identify policies attached to users, roles, and groups.
+- Determine misconfigurations that may lead to privilege escalation.
+- Retrieve the hidden flag by following the flag format
+
+** attack flow
+
+[[./imgs/iam.png]]
+
+
+** configure aws cli
+credentials -->
+#+begin_src bash
+aws configure
+#+end_src
+
+whoami -->
+#+begin_src bash
+aws sts get-caller-identity
+#+end_src
+
+** enumerate IAM groups
+Each group can contain users, and policies can be attached to the groups, which provide permissions for all users in that group.
+#+begin_src bash
+aws iam list-groups
+#+end_src
+
+** enumerate IAM users
+IAM users represent individuals or services that can interact with AWS resources and are associated with specific permissions
+#+begin_src bash
+aws iam list-users
+#+end_src
+
+** enumerate IAM roles
+IAM roles are used to delegate permissions to users, applications, or services that don’t have permanent credentials but require access to AWS resources
+#+begin_src bash
+aws iam list-roles
+#+end_src
+
+For specific role -->
+#+begin_src bash
+aws iam list-role-policies --role-name <rolename>
+#+end_src
+
+For the current user -->
+#+begin_src bash
+aws iam list-attached-role-policies --role-name <rolename>
+#+end_src
+
+** retrive role details
+for specific role -->
+#+begin_src bash
+aws iam get-role --role-name <rolename>
+#+end_src
