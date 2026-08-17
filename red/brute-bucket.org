@@ -1,0 +1,46 @@
+#+title: Brute Bucket
+#+description: As a member of Secure-corp's security team, you are responsible for identifying suspicious S3 Bucket object brute forcing
+
+* introduction
+The primary objective of this challenge is to detect and investigate suspicious Bucket object brute forcing within an Enterprise AWS environment. Participants will act as a security analyst to identify and investigate logs and events which are accumulated from the S3 Access log to identify the Bucket object brute forcing.
+
+The challenge will assess their knowledge of S3 Access log, and best practices for monitoring and securing AWS resources like S3 Buckets.
+
+* why monitoring S3 buckets
+Monitoring S3 bucket S3 Bucket object brute forcing activity is essential for Data Protection, Security, Compliance, Risk Management:
+
+- security: S3 Bucket object brute forcing can reveal publicly accessible S3 buckets that were intended to be private. Monitoring helps detect unauthorized attempts to discover and access sensitive data stored in these buckets.
+
+- data privacy: Unauthorized access to S3 buckets can lead to exposure of confidential or sensitive information. Monitoring helps ensure that only authorized entities can access data stored in S3 buckets.
+
+- compliance: Monitoring helps organizations comply with data protection regulations (e.g., GDPR, HIPAA) by preventing unauthorized access to personal or sensitive data stored in S3 buckets.
+
+[[../imgs/brute_s3.png]]
+
+* Targeted Investigation of CloudTrail logs
+Our initial investigation begins by prioritizing CloudTrail logs over our SIEM solution.
+#+begin_src shell
+event.dataset: aws.cloudtrail
+#+end_src
+
+CloudTrail logs generally contain detailed records of information, including event time, source, name, user identity, resource information, and more.
+
+* Prioritise the S3 activity
+To meet our challenge objective, the next step is to filter out aws-s3 which are associated with input.type fields.
+#+begin_src shell
+event.dataset: aws.cloudtrail and input.type: aws-s3
+#+end_src
+
+* Investigate activities that result in failures and events that are associated with GET.OBJECT activity.
+By filtering out these event actions, we can effectively conduct investigations specifically focused on brute forcing related events.
+#+begin_src shell
+event.dataset: aws.cloudtrail and input.type: aws-s3 and event.outcome: failure and event.action: GetObject
+#+end_src
+
+* user-agent based co-relation
+To correlate legitimate and malicious activity, multiple validation points can be leveraged, including IP address, geolocation, and—importantly—the User-Agent string. In brute-force attacks, it's common to observe adversaries using various automation tools, which often present distinctive User-Agent patterns
+#+begin_src shell
+event.dataset: aws.cloudtrail and input.type: aws-s3 and event.outcome: failure and event.action: GetObject and user_agent.original: (*Wfuzz* or “massdns” or “nikto” or “dirb”)
+#+end_src
+
+- The steps outlined above will help you to perform an investigation similar to S3 Bucket object brute forcing. The specific query may vary based on your SIEM provider, but the investigation process remains the same.

